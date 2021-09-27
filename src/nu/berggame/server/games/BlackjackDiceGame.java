@@ -1,76 +1,43 @@
-package com.company.server;
+package nu.berggame.server.games;
 
-import com.company.shared.Dice;
-import com.company.shared.messages.DiceRollMessage;
-import com.company.shared.messages.Message;
-import com.company.shared.messages.ServerMessage;
+import nu.berggame.server.DummyClient;
+import nu.berggame.server.Game;
+import nu.berggame.server.Player;
+import nu.berggame.server.User;
+import nu.berggame.shared.Dice;
+import nu.berggame.shared.cards.CardDeck;
+import nu.berggame.shared.messages.DiceRollMessage;
+import nu.berggame.shared.messages.ServerMessage;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class BlackjackGame implements Game, Runnable{
+public class BlackjackDiceGame extends Game {
 
-    private final int timeoutSeconds = 5;
-
-    private String instanceName = "";
     private int targetScore;
 
     DummyClient dealer;
 
-    private List<User> players;
-    private int maxPlayerCount;
-
-    private boolean alive;
-
-    public BlackjackGame(String instanceName, int maxPlayerCount, int targetScore)
+    public BlackjackDiceGame(String instanceName, int maxPlayerCount, int targetScore)
     {
-        players = new ArrayList<>();
-        this.instanceName = instanceName;
-        this.maxPlayerCount = maxPlayerCount;
+        super(instanceName, maxPlayerCount);
         this.targetScore = targetScore;
-        this.alive = false;
     }
 
     @Override
-    public void run() {
-
-        alive = true;
-        int iteration = 0;
-        while(!allPlayersReady()) {
-            try {
-                Thread.sleep(1000);
-
-                if (iteration == timeoutSeconds) {
-
-                    User[] unreadyPlayers = getAllUnreadyPlayers();
-
-                    for (User unreadyPlayer : unreadyPlayers) {
-                        gameBroadcast(new ServerMessage(unreadyPlayer.getPlayer().getName() + " is not ready!", false), unreadyPlayers);
-                    }
-                    iteration = 0;
-                }
-                iteration++;
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        gameBroadcast(new ServerMessage("All players ready, starting game!", false));
-
-        int currentPlayerIndex = 0;
+    public void runGame() {
 
         dealer = new DummyClient(new Player("Dealer"));
         dealer.getPlayer().setAlias("Dealer");
-        players.add(0, dealer);
+        getPlayers().add(0, dealer);
 
         while (!hasPlayerWon()) {
-            for (int i = players.size()-1; i != -1; i--) {
-                turn(players.get(i));
+            for (int i = getPlayers().size()-1; i != -1; i--) {
+                turn(getPlayers().get(i));
             }
 
-            if (players.size() == 1) {
+            if (getPlayers().size() == 1) {
                 break;
             }
 
@@ -99,7 +66,7 @@ public class BlackjackGame implements Game, Runnable{
             gameBroadcast(new ServerMessage("", false));
             gameBroadcast(new ServerMessage("Current Score: ", false));
             gameBroadcast(new ServerMessage("------------------------", false));
-            for (User user : players) {
+            for (User user : getPlayers()) {
                 gameBroadcast(new ServerMessage(user.getPlayer().getName() + " - " + user.getPlayer().getScore(), false));
                 gameBroadcast(new ServerMessage("------------------------", false));
             }
@@ -113,11 +80,6 @@ public class BlackjackGame implements Game, Runnable{
         }
 
         closeGame();
-        alive = false;
-    }
-
-    public synchronized boolean isAlive() {
-        return this.alive;
     }
 
     private void turn(User player) {
@@ -162,6 +124,9 @@ public class BlackjackGame implements Game, Runnable{
             gameBroadcast(new ServerMessage("", false));
 
             int currentScore = 0;
+
+            CardDeck deck = new CardDeck.Builder().pictureCardsAsTen(true).overrideAceValue(11).build();
+            deck.shuffle();
 
             currentScore = rollAllDice(dice);
             gameBroadcast(new ServerMessage(currentPlayer.getName() + " rolls " + currentScore, false));
@@ -268,9 +233,9 @@ public class BlackjackGame implements Game, Runnable{
             response = player.readResponse();
 
             if (response == null) {
-                System.out.println(player.getPlayer().getName() + " has disconnected from: " + this.instanceName);
+                System.out.println(player.getPlayer().getName() + " has disconnected from: " + getInstanceName());
                 gameBroadcast(new ServerMessage(player.getPlayer().getName() + " has disconnected from the server", false));
-                players.remove(player);
+                removePlayer(player);
                 return false;
             }
 
@@ -296,7 +261,7 @@ public class BlackjackGame implements Game, Runnable{
     }
 
     private boolean hasPlayerWon() {
-        for (User ply : players) {
+        for (User ply : getPlayers()) {
             if (ply.getPlayer().getScore() >= targetScore) {
                 return true;
             }
@@ -304,88 +269,11 @@ public class BlackjackGame implements Game, Runnable{
         return false;
     }
 
-    private User[] getAllUnreadyPlayers() {
-        List<User> unreadyPlayers = new ArrayList<>();
-        for (User ply : players) {
-            if (!ply.getReady()) {
-                unreadyPlayers.add(ply);
-            }
-        }
-
-        return unreadyPlayers.toArray(new ClientThread[0]);
-    }
-
-    private boolean allPlayersReady() {
-        for (User ply : players) {
-            if (!ply.getReady()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void closeGame() {
-        for (User ply : players) {
-            ply.closeConnection();
-        }
-
-        players.clear();
-    }
-
-    public void gameBroadcast(Message message) {
-        for (User ply : players) {
-            ply.printMessage(message);
-        }
-    }
-
-    public void gameBroadcast(Message message, User excludedPlayer) {
-        for (User ply : players) {
-            if (ply != excludedPlayer) {
-                ply.printMessage(message);
-            }
-        }
-    }
-
-    public void gameBroadcast(Message message, User[] excludedPlayers) {
-        for (User player : players) {
-            boolean excluded = false;
-            for (User exPlayer : excludedPlayers) {
-                if (player == exPlayer) {
-                    excluded = true;
-                    break;
-                }
-            }
-
-            if (!excluded) {
-                player.printMessage(message);
-            }
-        }
-    }
-
-    public synchronized boolean addPlayer(User player) {
-        if (this.isAlive() == true) {
-            return false;
-        }
-        if (players.size() == this.maxPlayerCount)
-        {
-            return false;
-        }
-        else
-        {
-            players.add(player);
-            return true;
-        }
-    }
-
-    public synchronized void removePlayer(User player) {
-        players.remove(player);
-    }
-
     private User[] getRoundWinners() // Get all winners of the current round.
     {
         ArrayList<User> roundWinners = new ArrayList<User>(); // Create a new arraylist to store winners that have won the round.
 
-        for (User ply : players)
+        for (User ply : getPlayers())
         {
             if (!ply.getPlayer().getAlias().equalsIgnoreCase("dealer")) // If the player has a greater score than the dealer save them to the winner array.
             {
@@ -398,7 +286,7 @@ public class BlackjackGame implements Game, Runnable{
 
         if (roundWinners.size() == 0)
         {
-            for (User ply : players) {
+            for (User ply : getPlayers()) {
                 if (!ply.getPlayer().getAlias().equalsIgnoreCase("dealer")) {
                     if (ply.getPlayer().getData() == dealer.getPlayer().getData()) {
                         dealer.getPlayer().setData(0);
@@ -411,6 +299,7 @@ public class BlackjackGame implements Game, Runnable{
                 if (dealer.getPlayer().getData() == 99) {
                     dealer.getPlayer().setData(21);
                 }
+
                 roundWinners.add(dealer); // If no winner was found between the player, assume the dealer has won.
             }
         }
@@ -421,7 +310,7 @@ public class BlackjackGame implements Game, Runnable{
     private User[] getAllGameWinners() {
         List<User> winners = new ArrayList<User>();
 
-        for (User user : players) {
+        for (User user : getPlayers()) {
             if (user.getPlayer().getScore() >= targetScore) {
                 winners.add(user);
             }
@@ -429,13 +318,4 @@ public class BlackjackGame implements Game, Runnable{
 
         return winners.toArray(new User[0]);
     }
-
-    public int getPlayerCount() {
-        return players.size();
-    }
-
-    public String getInstanceName() {
-        return this.instanceName;
-    }
-
 }

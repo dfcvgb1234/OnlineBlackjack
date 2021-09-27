@@ -1,8 +1,10 @@
-package com.company.client;
+package nu.berggame.client;
 
-import com.company.shared.messages.DiceRollMessage;
-import com.company.shared.messages.ServerMessage;
+import nu.berggame.shared.messages.CardMessage;
+import nu.berggame.shared.messages.DiceRollMessage;
+import nu.berggame.shared.messages.ServerMessage;
 
+import java.io.IOException;
 import java.util.*;
 
 public class GameClient {
@@ -29,18 +31,35 @@ public class GameClient {
       while (true) {
          String clientMessage = client.readMessage();
          String messageType = clientMessage.split(";")[0];
+
          if (messageType.equals("msg")) {
             if (!printMessage(new ServerMessage(clientMessage), client, input)) {
                break;
             }
          }
-         else {
+         else if (messageType.equals("drm")) {
             renderDice(new DiceRollMessage(clientMessage));
          }
-         
+         else if (messageType.equals("cm")) {
+            renderCards(new CardMessage(clientMessage));
+         }
+         else if (messageType.equals("cls")) {
+            clearConsole();
+         }
       }
       
       client.stopConnection();
+   }
+
+   private static void clearConsole() {
+      try {
+         if (System.getProperty("os.name").contains("Windows")) {
+            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+         }
+         else {
+            System.out.print("\033\143");
+         }
+      } catch (IOException | InterruptedException ex) {}
    }
 
    private static boolean containsNonAllowedCharacters(String name) {
@@ -51,6 +70,10 @@ public class GameClient {
          }
       }
       return false;
+   }
+
+   private static void renderCards(CardMessage cm) {
+      GameRenderer.renderCards(cm.getCards());
    }
 
    private static void renderDice(DiceRollMessage drm) {

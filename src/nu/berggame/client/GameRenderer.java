@@ -1,14 +1,85 @@
-package com.company.client;
+package nu.berggame.client;
 
-import com.company.shared.Dice;
+import nu.berggame.shared.Dice;
+import nu.berggame.shared.cards.Card;
 
 public class GameRenderer {
    
-   public static final String DICE_TOP = "/-------\\"; // How the top border of the dice is shown.
-   public static final String DICE_BOTTOM = "\\-------/"; // How the bottom border of the dice is shown.
-   public static final char DICE_BORDER_CHAR = '|'; // How the border of the dice is shown.
-   public static final char DICE_DOT_CHAR = 'o'; // How the eyes of the dice is shown.
-   
+   public static final String DICE_TOP = "╔═══════╗"; // How the top border of the dice is shown.
+   public static final String DICE_BOTTOM = "╚═══════╝"; // How the bottom border of the dice is shown.
+   public static final char DICE_BORDER_CHAR = '║'; // How the border of the dice is shown.
+   public static final char DICE_DOT_CHAR = '•'; // How the eyes of the dice is shown.
+
+   /*
+      ╭──────────╮
+      │ 3        │
+      │ ♣        │
+      │          │
+      │        ♣ │
+      │        3 │
+      ╰──────────╯
+       */
+
+   public static void renderCards(Card[] cards) {
+
+
+      for (Card card : cards) {
+         System.out.print("╭──────────╮ ");
+      }
+      System.out.println();
+      for (Card card : cards) {
+         System.out.print(String.format("│ %-9s│ ", card.getCardValue()));
+      }
+      System.out.println();
+      for (Card card : cards) {
+         System.out.print(String.format("│ %-9s│ ", getCardSymbol(card.getCardSymbol())));
+      }
+      System.out.println();
+      for (Card card : cards) {
+         System.out.print("│          │ ");
+      }
+      System.out.println();
+      for (Card card : cards) {
+         System.out.print(String.format("│%9s │ ", getCardSymbol(card.getCardSymbol())));
+      }
+      System.out.println();
+      for (Card card : cards) {
+         System.out.print(String.format("│%9s │ ", card.getCardValue()));
+      }
+      System.out.println();
+      for (Card card : cards) {
+         System.out.print("╰──────────╯ ");
+      }
+      System.out.println();
+   }
+
+   private static String getCardSymbol(Card.CardSymbol symbol) {
+      String resultSymbol = "";
+      switch (symbol) {
+         case Club:
+            resultSymbol = "♣";
+            break;
+
+         case Heart:
+            resultSymbol = "♥";
+            break;
+
+         case Spade:
+            resultSymbol = "♤";
+            break;
+
+         case Diamond:
+            resultSymbol = "♦";
+            break;
+
+         case Joker:
+            resultSymbol = "J";
+            break;
+      }
+
+      return resultSymbol;
+   }
+
    public static void renderDice(Dice[] dice) {
       int diceCount = dice.length;
 

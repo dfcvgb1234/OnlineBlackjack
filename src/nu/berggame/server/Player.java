@@ -1,4 +1,4 @@
-package com.company.server;
+package nu.berggame.server;
 
 public class Player {
 

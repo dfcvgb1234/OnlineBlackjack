@@ -1,6 +1,6 @@
-package com.company.server;
+package nu.berggame.server;
 
-import com.company.shared.messages.Message;
+import nu.berggame.shared.messages.Message;
 
 public class DummyClient implements User {
 

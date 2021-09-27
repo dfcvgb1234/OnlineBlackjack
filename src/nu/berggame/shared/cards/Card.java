@@ -1,30 +1,28 @@
-package com.company.shared.cards;
+package nu.berggame.shared.cards;
 
-import com.company.shared.Component;
-import com.company.shared.messages.CardMessage;
-import com.company.shared.messages.Message;
+import nu.berggame.shared.Component;
 
 public class Card implements Component {
 
     private CardSymbol cardSymbol;
     private int cardValue;
 
+    private CardDeck deck;
+
     private boolean hasSpecialName;
     private CardSpecialValue specialValue;
-
-    public Card(CardDeck deck) {
-        deck.addCard(this);
-    }
 
     public Card (CardSymbol symbol, int cardValue) {
         this.cardSymbol = symbol;
         this.cardValue = cardValue;
-
-
     }
 
     public Card() {
 
+    }
+
+    public void setCardDeck (CardDeck deck) {
+        this.deck = deck;
     }
 
     public static CardSpecialValue getSpecialFromValue(int value) {
@@ -79,15 +77,24 @@ public class Card implements Component {
         return cardValue;
     }
 
-    public Class<? extends Message> getMessageType() {
-        return CardMessage.class;
+    public CardSymbol getCardSymbol() {
+        return cardSymbol;
+    }
+
+    public int getCardValue() {
+        return cardValue;
+    }
+
+    public CardDeck getDeck() {
+        return deck;
     }
 
     public enum CardSymbol {
         Club,
         Diamond,
         Heart,
-        Spade
+        Spade,
+        Joker
     }
 
     public enum CardSpecialValue {

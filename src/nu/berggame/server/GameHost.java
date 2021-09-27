@@ -1,6 +1,7 @@
-package com.company.server;
+package nu.berggame.server;
 
-import com.company.shared.messages.ServerMessage;
+import nu.berggame.server.games.BlackjackDiceGame;
+import nu.berggame.shared.messages.ServerMessage;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -8,7 +9,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlackjackServer {
+public class GameHost {
 
     private List<ClientThread> clients;
     private ServerSocket socket;
@@ -24,10 +25,10 @@ public class BlackjackServer {
         try {
             socket = new ServerSocket(port);
 
-            BlackjackGame[] games = new BlackjackGame[MAX_GAME_INSTANCES];
+            BlackjackDiceGame[] games = new BlackjackDiceGame[MAX_GAME_INSTANCES];
 
             for (int i = 0; i < MAX_GAME_INSTANCES; i++) {
-                games[i] = new BlackjackGame("Blackjack Server " + (i+1), MAX_PLAYER_COUNT, TARGET_SCORE);
+                games[i] = new BlackjackDiceGame("Blackjack Server " + (i+1), MAX_PLAYER_COUNT, TARGET_SCORE);
             }
 
             System.out.println("Blackjack server started!");
@@ -54,17 +55,17 @@ public class BlackjackServer {
         }
     }
 
-    private void refreshAvailableGames(BlackjackGame[] games) {
-        for (BlackjackGame game : games) {
-            if (!game.isAlive() && game.getPlayerCount() == 0) {
+    private void refreshAvailableGames(BlackjackDiceGame[] games) {
+        for (BlackjackDiceGame game : games) {
+            if (!game.isAlive() && game.getCurrentPlayerCount() == 0) {
                 System.out.println(game.getInstanceName() + " has been refreshed");
-                game = new BlackjackGame(game.getInstanceName(), MAX_PLAYER_COUNT, TARGET_SCORE);
+                game = new BlackjackDiceGame(game.getInstanceName(), MAX_PLAYER_COUNT, TARGET_SCORE);
             }
         }
     }
 
-    private boolean findNextAvailableServer(ClientThread player, BlackjackGame[] games) {
-        for (BlackjackGame game : games) {
+    private boolean findNextAvailableServer(ClientThread player, BlackjackDiceGame[] games) {
+        for (BlackjackDiceGame game : games) {
             if (game.addPlayer(player)) {
                 player.setCurrentGameInstance(game);
                 if (!game.isAlive()) {

@@ -1,7 +1,7 @@
-package com.company.server;
+package nu.berggame.server;
 
-import com.company.shared.messages.Message;
-import com.company.shared.messages.ServerMessage;
+import nu.berggame.shared.messages.Message;
+import nu.berggame.shared.messages.ServerMessage;
 
 import java.io.*;
 import java.net.*;
@@ -12,12 +12,12 @@ public class ClientThread extends Thread implements User {
     private PrintWriter writer;
     private BufferedReader reader;
     private Socket socket;
-    private BlackjackServer server;
+    private GameHost server;
     private Player player;
 
     private Game currentGameInstance;
 
-    public ClientThread(Socket socket, BlackjackServer server) {
+    public ClientThread(Socket socket, GameHost server) {
         this.socket = socket;
         this.server = server;
         this.isReady = false;

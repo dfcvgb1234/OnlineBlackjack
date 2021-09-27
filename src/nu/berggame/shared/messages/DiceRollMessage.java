@@ -1,6 +1,6 @@
-package com.company.shared.messages;
+package nu.berggame.shared.messages;
 
-import com.company.shared.Dice;
+import nu.berggame.shared.Dice;
 
 public class DiceRollMessage implements Message {
 

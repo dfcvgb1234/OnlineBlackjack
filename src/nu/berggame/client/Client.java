@@ -1,4 +1,4 @@
-package com.company.client;
+package nu.berggame.client;
 
 import java.io.*;
 import java.net.*;

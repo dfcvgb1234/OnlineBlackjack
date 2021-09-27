@@ -1,4 +1,4 @@
-package com.company.shared.messages;
+package nu.berggame.shared.messages;
 
 public interface Message {
 

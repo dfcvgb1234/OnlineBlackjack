@@ -1,7 +1,7 @@
-package com.company.shared;
+package nu.berggame.shared;
 
-import com.company.shared.messages.DiceRollMessage;
-import com.company.shared.messages.Message;
+import nu.berggame.shared.messages.DiceRollMessage;
+import nu.berggame.shared.messages.Message;
 
 import java.util.Random;
 
@@ -38,7 +38,7 @@ public class Dice implements Component{
         }
     }
 
-    public Class<? extends Message> getMessageType() {
+    public static Class<? extends Message> getMessageType() {
         return DiceRollMessage.class;
     }
 }
