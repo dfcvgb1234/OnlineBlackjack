@@ -1,9 +1,6 @@
 package nu.berggame.server.games;
 
-import nu.berggame.server.DummyClient;
-import nu.berggame.server.Game;
-import nu.berggame.server.Player;
-import nu.berggame.server.User;
+import nu.berggame.server.*;
 import nu.berggame.shared.Dice;
 import nu.berggame.shared.cards.CardDeck;
 import nu.berggame.shared.messages.DiceRollMessage;
@@ -18,6 +15,8 @@ public class BlackjackDiceGame extends Game {
     private int targetScore;
 
     DummyClient dealer;
+
+
 
     public BlackjackDiceGame(String instanceName, int maxPlayerCount, int targetScore)
     {
@@ -82,11 +81,17 @@ public class BlackjackDiceGame extends Game {
         closeGame();
     }
 
+    @Override
+    public void refresh() {
+        this.closeGame();
+    }
+
     private void turn(User player) {
         try {
+
             Dice[] dice = new Dice[2];
             dice[0] = new Dice(6);
-            dice[1] = new Dice(6);
+            dice[1] = new Dice(6); // Create a new dice pair with six sides each.
 
             Player currentPlayer = player.getPlayer();
 
@@ -123,12 +128,7 @@ public class BlackjackDiceGame extends Game {
             }
             gameBroadcast(new ServerMessage("", false));
 
-            int currentScore = 0;
-
-            CardDeck deck = new CardDeck.Builder().pictureCardsAsTen(true).overrideAceValue(11).build();
-            deck.shuffle();
-
-            currentScore = rollAllDice(dice);
+            int currentScore = rollAllDice(dice);
             gameBroadcast(new ServerMessage(currentPlayer.getName() + " rolls " + currentScore, false));
             gameBroadcast(new DiceRollMessage(dice));
             gameBroadcast(new ServerMessage("", false));
@@ -137,20 +137,25 @@ public class BlackjackDiceGame extends Game {
             currentPlayer.setData(currentScore); // Set the current player's data to their start score.
             Thread.sleep(500);
 
-            boolean continueRound = true; // Keeps track of the player input, if the players wants to stand, stop the round.
-            while (continueRound && currentScore < 16) // As long as their score is below 16 keep rolling with to dice.
+            while (true) // As long as their score is below 16 keep rolling with to dice.
             {
                 Thread.sleep(500);
                 if (!askForHitOrStand(player)) // Ask the player if they want to hit or stand, returns true if they want to hit.
                 {
-                    continueRound = false;
                     break;
                 }
 
                 gameBroadcast(new ServerMessage("", false));
                 gameBroadcast(new ServerMessage(currentPlayer.getName() + " rolls the dice!", false));
 
+                if (currentScore >= 16) {
+                    if (dice.length > 1) {
+                        dice = new Dice[1];
+                        dice[0] = new Dice(6); // Change dice array to contain only one die.
+                    }
+                }
                 int newScore = rollAllDice(dice); // The player wanted to hit, so they roll the dice.
+
                 gameBroadcast(new ServerMessage(currentPlayer.getName() + " rolls " + newScore, false));
                 gameBroadcast(new DiceRollMessage(dice));
 
@@ -158,46 +163,13 @@ public class BlackjackDiceGame extends Game {
                 gameBroadcast(new ServerMessage(currentPlayer.getName() + "'s current score is: " + currentScore, false));
 
                 currentPlayer.setData(currentScore); // Save the current score in the player.
-            }
 
-            if (playerIsBustOrBlackjack(player)) // When the player's score is greater that 16, check if they are bust or have blackjack.
-            {
-                return;
-            }
-
-            while (continueRound && currentScore < 22) // As long as the player's score is less than 22 keep playing with one dice.
-            {
-                Thread.sleep(500);
-                if (!askForHitOrStand(player)) // Ask the player if the want to hit or stand.
+                if (playerIsBustOrBlackjack(player)) // Check if the player are bust or have blackjack.
                 {
-                    continueRound = false;
-                    break;
-                }
-
-                gameBroadcast(new ServerMessage("", false));
-                gameBroadcast(new ServerMessage(currentPlayer.getName() + " rolls the dice!", false));
-
-                Dice[] oneDice = new Dice[1];
-                oneDice[0] = new Dice(6);
-                int newScore = rollAllDice(oneDice); // Roll only one dice
-                gameBroadcast(new ServerMessage(currentPlayer.getName() + " rolls " + newScore, false));
-                gameBroadcast(new DiceRollMessage(oneDice));
-
-                currentScore += newScore; // Add the roll to the current score.
-                gameBroadcast(new ServerMessage(currentPlayer.getName() + "'s current score is: " + currentScore, false));
-
-                currentPlayer.setData(currentScore); // Save the current score in the player.
-
-                if (currentScore >= 21) // If the score is greater than or equal to 21 exit the loop.
-                {
-                    break;
+                    return;
                 }
             }
 
-            if (playerIsBustOrBlackjack(player)) // Check if the player is bust or have blackjack.
-            {
-                return;
-            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

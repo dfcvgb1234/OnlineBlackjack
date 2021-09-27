@@ -77,6 +77,7 @@ public abstract class Game implements Runnable{
     }
 
     public abstract void runGame();
+    public abstract void refresh();
 
     public void closeGame() {
         for (User ply : players) {

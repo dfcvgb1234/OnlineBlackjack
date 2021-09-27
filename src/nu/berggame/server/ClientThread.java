@@ -40,14 +40,54 @@ public class ClientThread extends Thread implements User {
             reader = new BufferedReader(new InputStreamReader(input));
 
             String playerName = reader.readLine();
-            System.out.println("A player joined: " + playerName + " | Location: " + this.getCurrentGameInstance().getInstanceName());
+            System.out.println("A player joined: " + playerName);
             Player ply = new Player(playerName);
-            this.getCurrentGameInstance().gameBroadcast(new ServerMessage(ply.getName() + " has joined the game!", false), this);
-            printMessage(new ServerMessage("You have joined: " + this.getCurrentGameInstance().getInstanceName(), false));
             this.player = ply;
 
-            printMessage(new ServerMessage("write OK when ready to play: ", true));
+            String selectedGame = "";
+            boolean gameSelected = false;
+            while (gameSelected == false) {
+                printMessage(new ServerMessage("Game list:", false));
+                String[] gameList = server.getGameList();
+                for (int i = 0; i < gameList.length; i++) {
+                    printMessage(new ServerMessage((i+1) + ". " + gameList[i], false));
+                }
+                printMessage(new ServerMessage("", false));
+                printMessage(new ServerMessage("Please select a game: ", true));
+                String message = reader.readLine();
+                try {
+                    int selectedGameIndex = Integer.parseInt(message)-1;
+                    if (selectedGameIndex < 0 || selectedGameIndex > gameList.length-1) {
+                        printMessage(new ServerMessage("Please enter a numerical value between 1 and " + gameList.length, false));
+                        printMessage(new ServerMessage("", false));
+                        gameSelected = false;
+                    }
+                    else{
+                        selectedGame = gameList[selectedGameIndex];
+                        gameSelected = true;
+                        printMessage(new ServerMessage("", false));
+                        printMessage(new ServerMessage("looking for game...", false));
+                    }
+                }
+                catch (Exception ex) {
+                    printMessage(new ServerMessage("Please enter a numerical value between 1 and " + gameList.length, false));
+                    printMessage(new ServerMessage("", false));
+                    gameSelected = false;
+                }
+            }
 
+            if (!server.findNextAvailableServer(this, selectedGame)) {
+                printMessage(new ServerMessage("No open servers found!", false));
+                this.closeConnection();
+                return;
+            }
+            else {
+                System.out.println(this.player.getName() + " just joined: " + getCurrentGameInstance().getInstanceName());
+                printMessage(new ServerMessage("You just joined: " + getCurrentGameInstance().getInstanceName(), false));
+            }
+
+            printMessage(new ServerMessage("", false));
+            printMessage(new ServerMessage("When ready please write ok: ", true));
             while (!getReady())
             {
                 String message = reader.readLine();
