@@ -3,17 +3,26 @@ package nu.berggame.client;
 import java.io.*;
 import java.net.*;
 
-public class Client {
-    private Socket clientSocket;
-    private PrintWriter out;
-    private BufferedReader in;
+/**
+ * Client class used to connect and disconnect from a server, and send and receive messages from a server.
+ *
+ * @author  Sebastian Berg Rasmussen
+ * @version 1.2
+ */
 
-   public boolean startConnection(String ip, int port) {
-      try
-      {
-         clientSocket = new Socket(ip, port);
-         out = new PrintWriter(clientSocket.getOutputStream(), true);
-         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+public class Client {
+   private Socket clientSocket;
+   private PrintWriter out;
+   private BufferedReader in;
+
+   public boolean startConnection(String ip, int port, String playerName) {
+      try {
+         clientSocket = new Socket(ip, port); // Client socket the user uses to connect to the server socket.
+         out = new PrintWriter(clientSocket.getOutputStream(), true); // Writes to the sockets output stream, this sends messages to the server.
+         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); // Reads all incoming messages from the server.
+
+         sendMessage(playerName); // Start of by sending player name to the server.
+
          return true;
       }
       catch(Exception ex) {
@@ -27,13 +36,11 @@ public class Client {
    }
     
    public String readMessage() {
-      try
-      {
+      try {
          return in.readLine();
       }
       catch (Exception ex) {
-         ex.printStackTrace();
-         System.out.println("Connection lost!");
+         System.out.println("Connection lost. Reason: " + ex.getMessage()); // It is usually only noticed that a disconnect occurred when reading from the server.
          stopConnection();
          System.exit(0);
          return "";
@@ -41,8 +48,7 @@ public class Client {
    }
 
    public void stopConnection() {
-      try
-      {
+      try {
          in.close();
          out.close();
          clientSocket.close();

@@ -2,79 +2,36 @@ package nu.berggame.shared.cards;
 
 import nu.berggame.shared.Component;
 
+/**
+ * Card class which represents a single playing card.
+ *
+ * @implNote This system is not yet complete, it is missing a ton of features.
+ *           A big feature implemented next would be context representation.
+ *           Where the card can change value and representation based on an outside context.
+ *
+ * @author  Sebastian Berg Rasmussen
+ * @version 0.3
+ */
+
 public class Card implements Component {
 
-    private CardSymbol cardSymbol;
-    private int cardValue;
+    private CardSymbol cardSymbol; // Symbol of a card, represented by an enum
+    private int cardValue; // Constant card value, expected to change to be more flexible.
 
-    private CardDeck deck;
+    private CardDeck deck; // Reference to the current card deck it is a member of.
 
-    private boolean hasSpecialName;
-    private CardSpecialValue specialValue;
-
+    // Only constructor available to a card, since it must always have a symbol and a value.
     public Card (CardSymbol symbol, int cardValue) {
         this.cardSymbol = symbol;
         this.cardValue = cardValue;
-    }
-
-    public Card() {
-
     }
 
     public void setCardDeck (CardDeck deck) {
         this.deck = deck;
     }
 
-    public static CardSpecialValue getSpecialFromValue(int value) {
-        CardSpecialValue specialValue = null;
-
-        switch (value) {
-            case 1:
-            case 14:
-                specialValue = CardSpecialValue.Ace;
-                break;
-
-            case 11:
-                specialValue = CardSpecialValue.Jack;
-                break;
-
-            case 12:
-                specialValue = CardSpecialValue.Queen;
-                break;
-
-            case 13:
-                specialValue = CardSpecialValue.King;
-                break;
-        }
-
-        return specialValue;
-    }
-
-    public static int getValueFromSpecial(CardSpecialValue specialValue, boolean highAce) {
-        int cardValue = 0;
-
-        switch (specialValue) {
-            case Ace:
-                if (highAce) {
-                    cardValue = 14;
-                } else {
-                    cardValue =  1;
-                }
-                break;
-
-            case Jack:
-                cardValue = 11;
-                break;
-
-            case Queen:
-                cardValue = 12;
-                break;
-
-            case King:
-                cardValue = 13;
-                break;
-        }
-        return cardValue;
+    public CardDeck getCardDeck() {
+        return deck;
     }
 
     public CardSymbol getCardSymbol() {
@@ -85,23 +42,13 @@ public class Card implements Component {
         return cardValue;
     }
 
-    public CardDeck getDeck() {
-        return deck;
-    }
-
+    // Enum with the different card symbols
     public enum CardSymbol {
         Club,
         Diamond,
         Heart,
         Spade,
         Joker
-    }
-
-    public enum CardSpecialValue {
-        Ace,
-        Jack,
-        Queen,
-        King
     }
 }
 
